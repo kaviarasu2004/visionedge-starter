@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>VisionEdge - Live Stream</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #0f172a; color: #e2e8f0; margin: 0; padding: 24px; }
+    h1 { font-size: 1.25rem; margin-bottom: 4px; }
+    .sub { color: #94a3b8; margin-bottom: 20px; font-size: 0.9rem; }
+    video { width: 100%; max-width: 720px; border-radius: 8px; background: #000; }
+    .panel { display: flex; gap: 24px; margin-top: 16px; flex-wrap: wrap; }
+    .stat { background: #1e293b; padding: 12px 20px; border-radius: 8px; min-width: 140px; }
+    .stat .label { font-size: 0.75rem; color: #94a3b8; }
+    .stat .value { font-size: 1.4rem; font-weight: 600; }
+    button { background: #22c55e; border: none; color: #052e16; font-weight: 600; padding: 10px 18px; border-radius: 6px; cursor: pointer; margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+  <h1>VisionEdge</h1>
+  <div class="sub">Annotated stream (CPU/YOLO starter -- see backend/main.py for the TensorRT upgrade path)</div>
+  <button id="start">Start Stream</button>
+  <video id="remoteVideo" autoplay playsinline></video>
+
+  <div class="panel">
+    <div class="stat"><div class="label">FPS</div><div class="value" id="fps">--</div></div>
+    <div class="stat"><div class="label">Inference (ms)</div><div class="value" id="inf">--</div></div>
+    <div class="stat"><div class="label">Frames Processed</div><div class="value" id="frames">--</div></div>
+  </div>
+
+  <script>
+    const BACKEND = "http://localhost:8000";
+
+    async function start() {
+      const pc = new RTCPeerConnection();
+      pc.addTransceiver("video", { direction: "recvonly" });
+
+      pc.ontrack = (event) => {
+        document.getElementById("remoteVideo").srcObject = event.streams[0];
+      };
+
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      const res = await fetch(`${BACKEND}/offer`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sdp: offer.sdp, type: offer.type, source: "0" }),
+      });
+      const answer = await res.json();
+      await pc.setRemoteDescription(answer);
+
+      setInterval(async () => {
+        const m = await (await fetch(`${BACKEND}/metrics`)).json();
+        document.getElementById("fps").textContent = m.fps;
+        document.getElementById("inf").textContent = m.last_inference_ms;
+        document.getElementById("frames").textContent = m.frames_processed;
+      }, 1000);
+    }
+
+    document.getElementById("start").addEventListener("click", start);
+  </script>
+</body>
+</html>
