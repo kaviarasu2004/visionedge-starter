@@ -44,7 +44,7 @@
       const res = await fetch(`${BACKEND}/offer`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sdp: offer.sdp, type: offer.type, source: "0" }),
+        body: JSON.stringify({ sdp: offer.sdp, type: offer.type, source: "traffic.mp4" }),
       });
       const answer = await res.json();
       await pc.setRemoteDescription(answer);
