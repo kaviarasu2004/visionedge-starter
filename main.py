@@ -36,6 +36,7 @@ from aiortc.contrib.media import MediaRelay
 from av import VideoFrame
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import HTTPException
 from pydantic import BaseModel
 from ultralytics import YOLO
 
@@ -101,17 +102,23 @@ class AnnotatedVideoTrack(VideoStreamTrack):
     async def recv(self):
         pts, time_base = await self.next_timestamp()
 
-        ok, frame = self.cap.read()
-        if not ok:
-            # loop the source video for demo purposes
-            self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+        try:
             ok, frame = self.cap.read()
+            if not ok:
+                # loop the source video for demo purposes
+                self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                ok, frame = self.cap.read()
 
-        frame = run_inference(frame)
+            frame = run_inference(frame)
 
-        now = time.perf_counter()
-        metrics["fps"] = round(1.0 / max(now - self._last_tick, 1e-6), 1)
-        self._last_tick = now
+            now = time.perf_counter()
+            metrics["fps"] = round(1.0 / max(now - self._last_tick, 1e-6), 1)
+            self._last_tick = now
+
+        except Exception as e:
+            print(f"Error reading frame or running inference: {e}")
+            # return a black frame on failure
+            frame = np.zeros((480, 640, 3), dtype=np.uint8)
 
         video_frame = VideoFrame.from_ndarray(frame, format="bgr24")
         video_frame.pts = pts
@@ -122,11 +129,14 @@ class AnnotatedVideoTrack(VideoStreamTrack):
 class Offer(BaseModel):
     sdp: str
     type: str
-    source: str = "0"  # webcam index as string, or a path to a video file
+    source: str = "traffic.mp4"  # webcam index as string, or a path to a video file
 
 
 @app.post("/offer")
 async def offer(params: Offer):
+    if len(pcs) >= 3:
+        raise HTTPException(status_code=503, detail="Maximum concurrent viewers reached. Please try again later.")
+
     pc_id = "PeerConnection(%s)" % uuid.uuid4()
     pc = RTCPeerConnection()
     pcs.add(pc)
