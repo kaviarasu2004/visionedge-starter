@@ -1,5 +1,15 @@
 # VisionEdge — Starter (Project 1)
 
+![Demo Preview](preview.png)
+
+**Quick Start:**
+```bash
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+python main.py
+```
+*Then open `index.html` in your browser and click "Start Stream".*
+
 A runnable version of "VisionEdge" from the Axlero project document, scoped to
 what you can actually build and demo on a normal machine (no NVIDIA GPU
 required to run it).
@@ -26,16 +36,13 @@ drop-in swap, not a rewrite.
 ## Setup
 
 ```bash
-cd backend
 python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 python main.py
 ```
 
-Then open `frontend/index.html` in a browser (or serve it with
-`python -m http.server 5500` from the `frontend/` folder) and click
-**Start Stream**. It defaults to webcam index 0 — change `source` in the
-fetch body to a video file path to use a sample RTSP-style clip instead.
+Then open `index.html` in a browser and click
+**Start Stream**. It defaults to streaming a sample traffic video.
 
 ## What to build next (mapped to the original Week 1–2 plan)
 1. Swap in a video file of a traffic intersection to simulate the smart-city
