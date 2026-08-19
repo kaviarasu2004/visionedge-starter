@@ -133,7 +133,7 @@ async def offer(params: Offer):
     track = AnnotatedVideoTrack(source=source)
     pc.addTrack(relay.subscribe(track))
 
-    offer_desc = RTCSessionDescription(sdp=params.sdp, type=params.type)
+    offer_desc = RTCSessionDescription(sdp=params.sdp.replace("\r\n", "\n").replace("\n", "\r\n"), type=params.type)
     await pc.setRemoteDescription(offer_desc)
     answer = await pc.createAnswer()
     await pc.setLocalDescription(answer)
