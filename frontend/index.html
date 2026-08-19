@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>VisionEdge</title>
+    <style>
+        body { font-family: sans-serif; background: #121212; color: white; text-align: center; margin: 0; padding: 20px; }
+        video { max-width: 100%; border: 2px solid #333; border-radius: 8px; background: #000; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
+        button:hover { background: #0056b3; }
+        .controls { margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <h1>VisionEdge Live Object Detection</h1>
+    <div class="controls">
+        <button id="startBtn">Start Stream</button>
+    </div>
+    <video id="videoElement" autoplay playsinline></video>
+
+    <script>
+        const startBtn = document.getElementById('startBtn');
+        const videoElement = document.getElementById('videoElement');
+
+        startBtn.addEventListener('click', async () => {
+            const pc = new RTCPeerConnection();
+            
+            pc.addEventListener('track', (evt) => {
+                if (evt.track.kind === 'video') {
+                    videoElement.srcObject = evt.streams[0];
+                }
+            });
+
+            // Add a transceiver to receive video
+            pc.addTransceiver('video', { direction: 'recvonly' });
+
+            const offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+
+            // Send offer to backend
+            const response = await fetch('/offer', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    sdp: pc.localDescription.sdp,
+                    type: pc.localDescription.type,
+                    source: "sample"
+                })
+            });
+
+            const answer = await response.json();
+            await pc.setRemoteDescription(answer);
+        });
+    </script>
+</body>
+</html>
