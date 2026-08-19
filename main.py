@@ -28,6 +28,7 @@ UPGRADE PATH (do this once you have access to an NVIDIA GPU + TensorRT):
 import asyncio
 import time
 import uuid
+from typing import Union
 
 import cv2
 import numpy as np
@@ -92,7 +93,7 @@ class AnnotatedVideoTrack(VideoStreamTrack):
     """Reads frames from a source (webcam index or video file path),
     runs inference, and yields annotated frames to aiortc."""
 
-    def __init__(self, source: int | str = 0):
+    def __init__(self, source: Union[int, str] = 0):
         super().__init__()
         self.cap = cv2.VideoCapture(source)
         if not self.cap.isOpened():
@@ -147,7 +148,7 @@ async def offer(params: Offer):
             pcs.discard(pc)
             await pc.close()
 
-    source: int | str = int(params.source) if params.source.isdigit() else params.source
+    source: Union[int, str] = int(params.source) if params.source.isdigit() else params.source
     track = AnnotatedVideoTrack(source=source)
     pc.addTrack(relay.subscribe(track))
 
