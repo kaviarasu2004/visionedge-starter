@@ -50,7 +50,7 @@ app.add_middleware(
 )
 
 relay = MediaRelay()
-pcs: set[RTCPeerConnection] = set()
+pcs = set()
 
 # Load once at startup. yolov8n is the smallest/fastest model -- good for a
 # CPU demo. Swap to yolov10 to match the doc once you're on a real GPU box.

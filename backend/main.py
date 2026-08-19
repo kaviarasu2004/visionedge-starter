@@ -42,7 +42,7 @@ app.add_middleware(
 )
 
 relay = MediaRelay()
-pcs: set[RTCPeerConnection] = set()
+pcs = set()
 model = YOLO("yolov8n.pt")
 
 metrics = {"fps": 0.0, "last_inference_ms": 0.0, "frames_processed": 0, "errors": 0}
