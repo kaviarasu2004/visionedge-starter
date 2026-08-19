@@ -42,7 +42,7 @@ app.add_middleware(
 )
 
 relay = MediaRelay()
-pcs: set[RTCPeerConnection] = set()
+pcs = set()
 model = YOLO("yolov8n.pt")
 
 metrics = {"fps": 0.0, "last_inference_ms": 0.0, "frames_processed": 0, "errors": 0}
@@ -133,7 +133,7 @@ async def offer(params: Offer):
     track = AnnotatedVideoTrack(source=source)
     pc.addTrack(relay.subscribe(track))
 
-    offer_desc = RTCSessionDescription(sdp=params.sdp, type=params.type)
+    offer_desc = RTCSessionDescription(sdp=params.sdp.replace("\r\n", "\n").replace("\n", "\r\n"), type=params.type)
     await pc.setRemoteDescription(offer_desc)
     answer = await pc.createAnswer()
     await pc.setLocalDescription(answer)
